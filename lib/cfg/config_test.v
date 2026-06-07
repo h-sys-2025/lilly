@@ -15,13 +15,12 @@
 module cfg
 
 import os
-import lib.petal.theme
 
 $if !windows {
 	fn test_parse_config_file_each_option_set() {
 		path := os.join_path(os.temp_dir(), 'test_lilly.cfg')
-
-		os.write_file(path, '# This is a comment\n\ntheme = light\nleader = ","\n')!
+		os.write_file(path,
+			'config {\n\ttheme "light"\n\tleader_key ","\n\texpand_tabs true\n\ttab_width 2\n}')!
 
 		defer {
 			os.rm(path) or {}
@@ -33,33 +32,16 @@ $if !windows {
 			return
 		}
 
-		assert config.theme == theme.light_theme
+		assert config.theme.name == 'light'
 		assert config.leader_key == ','
-	}
-
-	fn test_parse_config_file_multiple_set() {
-		path := os.join_path(os.temp_dir(), 'test_lilly.cfg')
-
-		os.write_file(path, 'theme = dark\ntheme = light\n')!
-
-		defer {
-			os.rm(path) or {}
-		}
-
-		config := parse_config_file(path) or {
-			assert false, 'expected parse to succeed but got: ${err}'
-
-			return
-		}
-
-		// Since it's a top-down parser, it uses the last setting
-		assert config.theme == theme.light_theme
+		assert config.expand_tabs
+		assert config.tab_width == 2
 	}
 
 	fn test_parse_config_file_theme() {
 		path := os.join_path(os.temp_dir(), 'test_lilly.cfg')
-
-		os.write_file(path, 'theme = gibberish\n')!
+		os.write_file(path,
+			'config {\n\ttheme "gibberish"\n\tleader_key ","\n\texpand_tabs true\n\ttab_width 2\n}')!
 
 		defer {
 			os.rm(path) or {}
@@ -67,42 +49,6 @@ $if !windows {
 
 		config := parse_config_file(path) or {
 			assert err.msg() == 'unknown theme'
-
-			return
-		}
-
-		assert false, 'should not succeed'
-	}
-
-	fn test_parse_config_file_leader_key_missing_start_quotes() {
-		path := os.join_path(os.temp_dir(), 'test_lilly.cfg')
-
-		os.write_file(path, 'leader = ,"\n')!
-
-		defer {
-			os.rm(path) or {}
-		}
-
-		config := parse_config_file(path) or {
-			assert err.msg() == 'expected " at the start'
-
-			return
-		}
-
-		assert false, 'should not succeed'
-	}
-
-	fn test_parse_config_file_leader_key_end_quotes() {
-		path := os.join_path(os.temp_dir(), 'test_lilly.cfg')
-
-		os.write_file(path, 'leader = ",\n')!
-
-		defer {
-			os.rm(path) or {}
-		}
-
-		config := parse_config_file(path) or {
-			assert err.msg() == 'expected " at the end'
 
 			return
 		}
@@ -161,7 +107,8 @@ $if !windows {
 		cfg_dir := os.join_path(tmp_dir, 'lilly_test_config')
 		cfg_path := os.join_path(cfg_dir, 'lilly', 'lilly.cfg')
 		os.mkdir_all(os.dir(cfg_path)) or { assert false, 'failed to create directories' }
-		os.write_file(cfg_path, '# This is a comment\n\ntheme = light\nleader = ","\n') or {
+		os.write_file(cfg_path,
+			'// This is a comment\n\nconfig {\n\ttheme "light"\n\tleader_key ","\n\texpand_tabs true\n\ttab_width 2\n}') or {
 			assert false, 'failed to write config file'
 		}
 		defer {

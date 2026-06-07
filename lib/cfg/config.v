@@ -15,6 +15,7 @@
 module cfg
 
 import os
+import kdlv
 import lib.petal.theme
 
 pub const light_theme_name = theme.light_theme_name
@@ -23,6 +24,14 @@ pub const dark_theme_name = theme.dark_theme_name
 pub struct Config {
 pub:
 	theme       theme.Theme
+	leader_key  string
+	expand_tabs bool
+	tab_width   int
+}
+
+pub struct ConfigFile {
+pub mut:
+	theme       string
 	leader_key  string
 	expand_tabs bool
 	tab_width   int
@@ -57,7 +66,7 @@ fn xdg_config_paths() []string {
 	return paths
 }
 
-fn parse_config_file(file_path string) !Config {
+pub fn parse_config_file(file_path string) !Config {
 	mut ttheme := theme.dark_theme
 	mut leader_key := ';'
 	mut expand_tabs := false
@@ -66,52 +75,39 @@ fn parse_config_file(file_path string) !Config {
 	$if !windows {
 		file := os.read_file(os.expand_tilde_to_home(file_path))!
 
-		for line in file.split_into_lines() {
-			trimmed := line.trim_space()
+		doc := kdlv.parse(file)!
+		if doc.nodes.len == 0 {
+			return error('empty config file')
+		}
 
-			if trimmed.starts_with('#') || trimmed.len == 0 {
-				continue
+		if doc.nodes[0].name != 'config' {
+			return error('no config node')
+		}
+
+		mut config := kdlv.decode[ConfigFile](kdlv.generate(kdlv.Document{
+			nodes: doc.nodes[0].children
+		}, kdlv.GenerateOptions{}))!
+
+		config.theme = config.theme.trim_space()
+
+		match config.theme {
+			'light' { ttheme = theme.light_theme }
+			'dark' { ttheme = theme.dark_theme }
+			'' {}
+			else { return error('unknown theme') }
+		}
+
+		if config.leader_key != '' {
+			if config.leader_key.len != 1 {
+				return error('invalid leader key, too long')
 			}
+			leader_key = config.leader_key
+		}
 
-			pair := trimmed.split('=')
+		expand_tabs = config.expand_tabs
 
-			if pair.len != 2 {
-				return error('line does not have a pair')
-			}
-
-			key := pair[0].trim_space()
-			value := pair[1].trim_space()
-
-			match key {
-				'theme' {
-					if value == 'dark' {
-						ttheme = theme.dark_theme
-					} else if value == 'light' {
-						ttheme = theme.light_theme
-					} else {
-						return error('unknown theme')
-					}
-				}
-				'leader' {
-					if value[0] != `"` {
-						return error('expected " at the start')
-					}
-
-					if value[value.len - 1] != `"` {
-						return error('expected " at the end')
-					}
-					leader_key = value.trim('"')
-				}
-				'expand_tabs' {
-					expand_tabs = value.bool()
-				}
-				'tab_width' {
-					tab_width = value.int()
-				}
-				else {
-					return error('unknown key')
-				}
-			}
+		if config.tab_width > 0 {
+			tab_width = config.tab_width
 		}
 	}
 
