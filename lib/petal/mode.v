@@ -14,7 +14,7 @@
 
 module petal
 
-import bobatea as tea
+import tauraamui.bobatea as tea
 import lib.petal.theme
 
 pub enum Mode as u8 {

@@ -16,7 +16,7 @@ module main
 
 import os
 import time
-import bobatea as tea
+import tauraamui.bobatea as tea
 import lib.documents
 import lib.documents.cursor
 import lib.clipboard

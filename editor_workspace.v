@@ -17,7 +17,7 @@ module main
 import os
 import time
 import math
-import bobatea as tea
+import tauraamui.bobatea as tea
 import lib.petal
 import lib.boba
 import lib.petal.theme

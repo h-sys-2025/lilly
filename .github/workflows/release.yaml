@@ -80,7 +80,7 @@ jobs:
           restore-keys: vmodules-${{ matrix.artifact_suffix }}-
 
       - name: Install dependencies
-        run: v install tauraamui.bobatea
+        run: v install tauraamui.tauraamui.bobatea
 
       - name: Generate git hash
         run: git log -n 1 --pretty=format:"%h" | tee ./.githash

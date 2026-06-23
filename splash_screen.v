@@ -16,7 +16,7 @@ module main
 
 import math
 import os
-import bobatea as tea
+import tauraamui.bobatea as tea
 import lib.palette
 import lib.petal.theme
 import lib.documents

@@ -14,7 +14,7 @@
 
 module main
 
-import bobatea as tea
+import tauraamui.bobatea as tea
 import lib.petal.theme
 
 struct VersionModel {
